@@ -1,0 +1,20 @@
+{
+  "name": "shaw-eoyc-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "fast-csv": "^2.4.1",
+    "hapi": "^17.5.2",
+    "hapi-auth-jwt2": "^8.1.0",
+    "hapi-mysql2": "^2.2.2",
+    "hapi-pino": "^4.0.4",
+    "jsonwebtoken": "^8.3.0"
+  }
+}
