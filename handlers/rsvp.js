@@ -7,7 +7,7 @@ console.log('payload: ', request.payload);
     try {
         const [employeeRow, employeeFields] = await pool.query("UPDATE childrens_employees SET firstName=?, lastName=?, email=? WHERE employeeId=? LIMIT 1", [request.payload.firstName, request.payload.lastName, request.payload.email, credentials.empId]);
         
-        const [rsvpRow, rsvpFields] = await pool.query("INSERT INTO childrens_rsvp (employeeId, status, photoWithSanta, spouseName, rsvpDateTime, updateDateTime) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE status=?, photoWithSanta=?, spouseName=?, updateDateTime=NOW()", [credentials.empId, request.payload.status, request.payload.photoWithSanta, request.payload.spouseName, request.payload.status, request.payload.photoWithSanta, request.payload.spouseName]);
+        const [rsvpRow, rsvpFields] = await pool.query("INSERT INTO childrens_rsvp (employeeId, status, photoWithSanta, dietary, spouseName, rsvpDateTime, updateDateTime) VALUES (?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE status=?, photoWithSanta=?, dietary=?, spouseName=?, updateDateTime=NOW()", [credentials.empId, request.payload.status, request.payload.photoWithSanta, request.payload.dietary, request.payload.spouseName, request.payload.status, request.payload.photoWithSanta, request.payload.dietary, request.payload.spouseName]);
         
         //Remove Children
         const [deleteChildrenRows, deleteChildrenFields] = await pool.query("DELETE FROM childrens_children WHERE employeeId=? LIMIT 4", [credentials.empId]);
@@ -19,7 +19,7 @@ console.log('payload: ', request.payload);
                 const child = request.payload.children[ii];
 
                 if(child.name.length) {
-                    let [childrensRow, childrensField] = await pool.query("INSERT INTO childrens_children (id, employeeId, name, age, gender) VALUES (null, ?, ?, ?, ?)", [credentials.empId, child.name, child.age, child.gender]);
+                    let [childrensRow, childrensField] = await pool.query("INSERT INTO childrens_children (id, employeeId, name, age, gender, relationship) VALUES (null, ?, ?, ?, ?, ?)", [credentials.empId, child.name, child.age, child.gender, child.relationship]);
                 }
             };
         }
@@ -35,9 +35,9 @@ exports.getRsvp = async (request, h) => {
     const credentials = request.auth.credentials;
 
     try {
-        const [rsvpRow, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.status, cr.spouseName, cr.photoWithSanta FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId = cr.employeeId  WHERE ce.employeeId=? ', [credentials.empId]);
+        const [rsvpRow, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.status, cr.spouseName, cr.photoWithSanta, cr.dietary FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId = cr.employeeId  WHERE ce.employeeId=? ', [credentials.empId]);
 
-        const [childrenRows, childrenFields] = await pool.query('SELECT name, age, gender FROM childrens_children WHERE employeeId=? LIMIT 4', [credentials.empId]);
+        const [childrenRows, childrenFields] = await pool.query('SELECT name, age, gender, relationship FROM childrens_children WHERE employeeId=? LIMIT 4', [credentials.empId]);
 
         return { employee: rsvpRow, children: childrenRows };
     } catch(err) {
