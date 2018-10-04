@@ -8,7 +8,7 @@ const version = 'v1';
 module.exports = [
     {
         method: 'GET',
-        path: `/${apiPath}/${version}/manage/list/{status}`,
+        path: `/${apiPath}/${version}/childrens/manage/list/{status}`,
         config: {
             cors: true,
             auth: {
@@ -20,7 +20,7 @@ module.exports = [
     },
     {
         method: 'GET',
-        path: `/${apiPath}/${version}/manage/employee/{searchTerm}`,
+        path: `/${apiPath}/${version}/childrens/manage/employee/{searchTerm}`,
         config: {
             cors: true,
             auth: {
@@ -32,7 +32,7 @@ module.exports = [
     },
     {
         method: 'GET',
-        path: `/${apiPath}/${version}/manage/counts`,
+        path: `/${apiPath}/${version}/childrens/manage/counts`,
         config: {
             cors: true,
             auth: {
@@ -44,7 +44,7 @@ module.exports = [
     },
     {
         method: 'PUT',
-        path: `/${apiPath}/${version}/manage/employee/{employeeId}`,
+        path: `/${apiPath}/${version}/childrens/manage/employee/{employeeId}`,
         config: { 
             cors: true,
             auth: {
@@ -56,7 +56,7 @@ module.exports = [
     },
     {
         method: 'POST',
-        path: `/${apiPath}/${version}/manage/employee`,
+        path: `/${apiPath}/${version}/childrens/manage/employee`,
         config: {
             cors: true,
             auth: {
