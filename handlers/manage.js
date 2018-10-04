@@ -43,7 +43,6 @@ exports.list = async (request, h) => {
             });
             
             return Object.keys(returnObj).map(ii => returnObj[ii]);
-            //return returnObj;
         }
     } catch(err) {
         return h.response({ success: false, err }).code(400);
@@ -67,6 +66,7 @@ exports.getEmployee = async (request, h) => {
         searchRows.forEach((searchRow) => {
             if(!returnObj[searchRow.employeeId]) {
                 returnObj[searchRow.employeeId] = {
+                    employeeId: searchRow.employeeId,
                     firstName: searchRow.firstName,
                     lastName: searchRow.lastName,
                     email: searchRow.email,
@@ -92,7 +92,7 @@ exports.getEmployee = async (request, h) => {
             }
         });
 
-        return returnObj;
+        return Object.keys(returnObj).map(ii => returnObj[ii]);
     } catch(err) {
          return h.response({ success: false, err }).code(400);
     };
