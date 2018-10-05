@@ -143,21 +143,21 @@ exports.addEmployee = async (request, h) => {
 };
 
 exports.getCounts = async (request, h) => {
-/*    const pool = request.mysql.pool;
+    const pool = request.mysql.pool;
 
     try {
         const promiseArray = [];
         promiseArray.push(
-            pool.query("SELECT COUNT(*) AS cnt FROM employees e LEFT JOIN rsvp r ON e.employeeId=r.employeeId WHERE r.status IS NULL")
+            pool.query("SELECT COUNT(*) AS cnt FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status IS NULL")
         );
         promiseArray.push(
-            pool.query("SELECT COUNT(*) AS cnt FROM employees e LEFT JOIN rsvp r ON e.employeeId=r.employeeId WHERE r.status = 0")
+            pool.query("SELECT COUNT(*) AS cnt FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status = 0")
         );
         promiseArray.push(
             pool.query("SELECT SUM(IF(guestName IS NULL or guestName = '', 1, 2)) AS cnt FROM employees e LEFT JOIN rsvp r ON e.employeeId=r.employeeId WHERE r.status = 1")
         );
         promiseArray.push(
-            pool.query("SELECT COUNT(*) AS cnt FROM employees e LEFT JOIN rsvp r ON e.employeeId=r.employeeId WHERE r.status = 2")
+            pool.query("SELECT COUNT(*) as cnt FROM childrens_rsvp cr LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=1")
         );
         
         return Promise.all(promiseArray)
@@ -165,13 +165,12 @@ exports.getCounts = async (request, h) => {
                 const notRespondedRows = response[0][0][0];
                 const cancelledRows = response[1][0][0];
                 const attendingRows = response[2][0][0];
-                const notAttendingRows = response[3][0][0];
+                const attendingChildrenRows = response[3][0][0];
 
                 const returnObj = {
                     notResponded: notRespondedRows.cnt,
                     cancelled: cancelledRows.cnt,
-                    attending: attendingRows.cnt,
-                    notAttending: notAttendingRows.cnt
+                    attending: parseInt(attendingRows.cnt) + parseInt(attendingChildrenRows.cnt),
                 };
 
                 return returnObj;
@@ -180,6 +179,6 @@ exports.getCounts = async (request, h) => {
                 return h.response({ success:false, err }).code(400);
             })
     } catch(err) {
+        console.log('getcounts error: ', err);
     } 
-    */
 };
