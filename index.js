@@ -1,6 +1,7 @@
 'use strict';
 
 const Hapi = require('hapi');
+const fs = require('fs');
 
 require('dotenv').config();
 
@@ -38,6 +39,10 @@ const init = async () => {
     const hapiOptions = {
         port: process.env.SERVER_PORT,
         host: process.env.SERVER_HOST,
+        tls: {
+            cert: fs.readFileSync('/etc/ssl/certs/rsvp_vancouver_shaw_ca.crt'),
+            key: fs.readFileSync('/etc/ssl/private/private-hapi.key'),
+        }, 
         router: {
             stripTrailingSlash: true
         },
