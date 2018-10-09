@@ -35,11 +35,11 @@ exports.getRsvp = async (request, h) => {
     const credentials = request.auth.credentials;
 
     try {
-        const [rsvpRow, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.status, cr.spouseName, cr.photoWithSanta, cr.dietary FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId = cr.employeeId  WHERE ce.employeeId=? ', [credentials.empId]);
+        const [rsvpRow, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.status, cr.spouseName, cr.photoWithSanta, cr.dietary FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId = cr.employeeId  WHERE ce.employeeId=? LIMIT 1', [credentials.empId]);
 
         const [childrenRows, childrenFields] = await pool.query('SELECT name, age, gender, relationship FROM childrens_children WHERE employeeId=? LIMIT 4', [credentials.empId]);
 
-        return { employee: rsvpRow, children: childrenRows };
+        return { employee: rsvpRow[0], children: childrenRows };
     } catch(err) {
         return h.response({ success: false, err }).code(400);
     }

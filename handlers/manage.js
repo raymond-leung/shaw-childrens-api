@@ -6,11 +6,11 @@ exports.list = async (request, h) => {
 
     try {
         if(status === null || status === 'null') {
-            const [notRespondedRows, notRespondedFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status IS NULL ORDER BY ce.firstName ASC, ce.lastName ASC');
+            const [notRespondedRows, notRespondedFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cr.photoWithSanta FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status IS NULL ORDER BY ce.firstName ASC, ce.lastName ASC');
 
             return notRespondedRows;
         } else {
-            const [rsvpRows, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=? ORDER BY ce.firstName ASC, ce.lastName ASC', [status]);
+            const [rsvpRows, rsvpFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cr.photoWithSanta, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=? ORDER BY ce.firstName ASC, ce.lastName ASC', [status]);
 
             const returnObj = {};
             rsvpRows.forEach((rsvpRow) => {
@@ -23,6 +23,7 @@ exports.list = async (request, h) => {
                         spouseName: rsvpRow.spouseName,
                         dietary: rsvpRow.dietary,
                         status: rsvpRow.status,
+                        photoWithSanta: rsvpRow.photoWithSanta,
                         children: [
                             {
                                 name: rsvpRow.name,
@@ -57,9 +58,9 @@ exports.getEmployee = async (request, h) => {
         let searchRows = [];
         let searchFields = [];
         if(Number.isInteger(parseInt(searchTerm))) {
-            [searchRows, searchFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE ce.employeeId=? ORDER BY ce.firstName ASC, ce.lastName ASC', [searchTerm]);
+            [searchRows, searchFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cr.photoWithSanta, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE ce.employeeId=? ORDER BY ce.firstName ASC, ce.lastName ASC', [searchTerm]);
         } else {
-            [searchRows, searchFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE ce.lastName=? ORDER BY ce.firstName ASC, ce.lastName ASC', [searchTerm]);
+            [searchRows, searchFields] = await pool.query('SELECT ce.employeeId, ce.firstName, ce.lastName, ce.email, cr.spouseName, cr.dietary, cr.status, cr.photoWithSanta, cc.name, cc.age, cc.gender, cc.relationship FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE ce.lastName=? ORDER BY ce.firstName ASC, ce.lastName ASC', [searchTerm]);
         }
 
         const returnObj = {};
@@ -73,6 +74,7 @@ exports.getEmployee = async (request, h) => {
                     spouseName: searchRow.spouseName,
                     dietary: searchRow.dietary,
                     status: searchRow.status,
+                    photoWithSanta: searchRow.photoWithSanta,
                     children: [
                         {
                             name: searchRow.name,
@@ -102,6 +104,10 @@ exports.updateEmployee = async(request, h) => {
     const pool = request.mysql.pool;
     const employeeId = request.params.employeeId;
 
+    if(!request.payload.lastName || !request.payload.children || request.payload.children.length === 0 || !request.payload.children[0].name) {
+        return h.response({ success: false, err: { message: 'missing or invalid parameters' } }).code(400);
+    }
+
     try {
         const [employeeRow, employeeFields] = await pool.query("UPDATE childrens_employees SET firstName=?, lastName=?, email=? WHERE employeeId=? LIMIT 1", [request.payload.firstName, request.payload.lastName, request.payload.email, employeeId]);
         
@@ -111,12 +117,12 @@ exports.updateEmployee = async(request, h) => {
         const [deleteChildrenRows, deleteChildrenFields] = await pool.query("DELETE FROM childrens_children WHERE employeeId=? LIMIT 4", [employeeId]);
         
         //Add Children back in
-        if(request.payload.children.length) {
+        if(request.payload.children && request.payload.children.length) {
             //request.payload.children.forEach((child) => {
             for(let ii=0; ii<request.payload.children.length; ii++) {
-                const child = request.payload.children[ii];
+                let child = request.payload.children[ii];
 
-                if(child.name.length) {
+                if(child.name && child.name.length) {
                     let [childrensRow, childrensField] = await pool.query("INSERT INTO childrens_children (id, employeeId, name, age, gender, relationship) VALUES (null, ?, ?, ?, ?, ?)", [employeeId, child.name, child.age, child.gender, child.relationship]);
                 }
             };
@@ -154,7 +160,7 @@ exports.getCounts = async (request, h) => {
             pool.query("SELECT COUNT(*) AS cnt FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status = 0")
         );
         promiseArray.push(
-            pool.query("SELECT SUM(IF(guestName IS NULL or guestName = '', 1, 2)) AS cnt FROM employees e LEFT JOIN rsvp r ON e.employeeId=r.employeeId WHERE r.status = 1")
+            pool.query("SELECT SUM(IF(spouseName IS NULL or spouseName = '', 1, 2)) AS cnt FROM childrens_employees ce LEFT JOIN childrens_rsvp cr ON ce.employeeId=cr.employeeId WHERE cr.status = 1")
         );
         promiseArray.push(
             pool.query("SELECT COUNT(*) as cnt FROM childrens_rsvp cr LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=1")

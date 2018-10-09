@@ -39,10 +39,6 @@ const init = async () => {
     const hapiOptions = {
         port: process.env.SERVER_PORT,
         host: process.env.SERVER_HOST,
-        tls: {
-            cert: fs.readFileSync('/etc/ssl/certs/rsvp_vancouver_shaw_ca.crt'),
-            key: fs.readFileSync('/etc/ssl/private/private-hapi.key'),
-        }, 
         router: {
             stripTrailingSlash: true
         },
@@ -52,6 +48,13 @@ const init = async () => {
             }
         }
     };
+
+    if(process.env.NODE_ENV === 'production') {
+        hapiOptions.tls = {
+            cert: fs.readFileSync('/etc/ssl/certs/rsvp_vancouver_shaw_ca.crt'),
+            key: fs.readFileSync('/etc/ssl/private/private-hapi.key'),
+        }
+    }
 
     const server = Hapi.server(hapiOptions);
     await server.start();
