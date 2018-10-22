@@ -165,18 +165,30 @@ exports.getCounts = async (request, h) => {
         promiseArray.push(
             pool.query("SELECT COUNT(*) as cnt FROM childrens_rsvp cr LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=1")
         );
-        
+        promiseArray.push(
+            pool.query("SELECT COUNT(*) as cnt FROM childrens_rsvp cr LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=1 AND cc.gender='male'")
+        );
+        promiseArray.push(
+            pool.query("SELECT COUNT(*) as cnt FROM childrens_rsvp cr LEFT JOIN childrens_children cc ON cr.employeeId=cc.employeeId WHERE cr.status=1 AND cc.gender='female'")
+        );
+
+
         return Promise.all(promiseArray)
             .then((response) => {
                 const notRespondedRows = response[0][0][0];
                 const cancelledRows = response[1][0][0];
                 const attendingRows = response[2][0][0];
                 const attendingChildrenRows = response[3][0][0];
+                const boysRows = response[4][0][0];
+                const girlsRows = response[5][0][0];
 
                 const returnObj = {
                     notResponded: notRespondedRows.cnt,
                     cancelled: cancelledRows.cnt,
                     attending: parseInt(attendingRows.cnt) + parseInt(attendingChildrenRows.cnt),
+                    adults: parseInt(attendingRows.cnt),
+                    boys: parseInt(boysRows.cnt),
+                    girls: parseInt(girlsRows.cnt)
                 };
 
                 return returnObj;
