@@ -43,7 +43,26 @@ exports.list = async (request, h) => {
                 }
             });
             
-            return Object.keys(returnObj).map(ii => returnObj[ii]);
+            let returnArray = Object
+                .keys(returnObj)
+                .map(ii => returnObj[ii]);
+            
+            returnArray
+                .sort((aa, bb) => {
+                    if(aa.firstName < bb.firstName) {
+                        return -1;
+                    } else if(aa.firstName > bb.firstName) {
+                        return 1;
+                    } else if(aa.lastName < bb.lastName) {
+                        return -1;
+                    } else if(aa.lstName > bb.lastName) {
+                        return 1;
+                    }
+
+                    return 0;
+                });
+
+            return returnArray;
         }
     } catch(err) {
         return h.response({ success: false, err }).code(400);
